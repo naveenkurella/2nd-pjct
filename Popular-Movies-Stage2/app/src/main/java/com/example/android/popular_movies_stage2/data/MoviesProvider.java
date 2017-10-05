@@ -77,21 +77,27 @@ public class MoviesProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         Uri returnUri;
-        switch (match) {
-            case MOVIES: {
-                long id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
-                if (id > 0) {
-                    returnUri = MovieContract.MovieEntry.buildMovieUri(id);
-                } else {
-                    throw new android.database.SQLException("Failed to insert row into " + uri);
+
+        try {
+            switch (match) {
+                case MOVIES: {
+                    long id = db.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
+                    if (id > 0) {
+                        returnUri = MovieContract.MovieEntry.buildMovieUri(id);
+                    } else {
+                        throw new android.database.SQLException("Failed to insert row into " + uri);
+                    }
+                    break;
                 }
-                break;
+                default:
+                    throw new UnsupportedOperationException("Unknown uri: " + uri);
             }
-            default:
-                throw new UnsupportedOperationException("Unknown uri: " + uri);
+            if (getContext() != null) {
+                getContext().getContentResolver().notifyChange(uri, null);
+            }
         }
-        if (getContext() != null) {
-            getContext().getContentResolver().notifyChange(uri, null);
+        finally {
+            db.close();
         }
         return returnUri;
     }
@@ -101,22 +107,26 @@ public class MoviesProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int rowsDeleted;
+try {
+    if (null == selection) {
+        selection = "1";
+    }
+    switch (match) {
+        case MOVIES:
+            rowsDeleted = db.delete(
+                    MovieContract.MovieEntry.TABLE_NAME, selection, selectionArgs);
+            break;
+        default:
+            throw new UnsupportedOperationException("Unknown uri: " + uri);
+    }
 
-        if (null == selection) {
-            selection = "1";
-        }
-        switch (match) {
-            case MOVIES:
-                rowsDeleted = db.delete(
-                        MovieContract.MovieEntry.TABLE_NAME, selection, selectionArgs);
-                break;
-            default:
-                throw new UnsupportedOperationException("Unknown uri: " + uri);
-        }
-
-        if (rowsDeleted != 0 && getContext() != null) {
-            getContext().getContentResolver().notifyChange(uri, null);
-        }
+    if (rowsDeleted != 0 && getContext() != null) {
+        getContext().getContentResolver().notifyChange(uri, null);
+    }
+}
+finally {
+    db.close();
+}
         return rowsDeleted;
     }
 
@@ -125,18 +135,25 @@ public class MoviesProvider extends ContentProvider {
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int rowsUpdated;
+        try {
+            switch (match) {
+                case MOVIES:
+                    rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME, values, selection,
+                            selectionArgs);
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unknown uri: " + uri);
+            }
+            if (rowsUpdated != 0 && getContext() != null) {
+                getContext().getContentResolver().notifyChange(uri, null);
+            }
 
-        switch (match) {
-            case MOVIES:
-                rowsUpdated = db.update(MovieContract.MovieEntry.TABLE_NAME, values, selection,
-                        selectionArgs);
-                break;
-            default:
-                throw new UnsupportedOperationException("Unknown uri: " + uri);
         }
-        if (rowsUpdated != 0 && getContext() != null) {
-            getContext().getContentResolver().notifyChange(uri, null);
+
+        finally {
+            db.close();
         }
-        return rowsUpdated;
-    }
+            return rowsUpdated;
+        }
+
 }

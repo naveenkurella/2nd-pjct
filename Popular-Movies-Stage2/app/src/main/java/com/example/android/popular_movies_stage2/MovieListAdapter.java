@@ -3,6 +3,7 @@ package com.example.android.popular_movies_stage2;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.support.annotation.Nullable;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -262,7 +263,7 @@ public class MovieListAdapter extends RecyclerView.Adapter<MovieListAdapter.View
         public final View mView;
         @Bind(R.id.thumbnail)
         ImageView mThumbnailView;
-        @Bind(R.id.title)
+         @Nullable @Bind(R.id.title)
         TextView mTitleView;
         public Movie mMovie;
 
